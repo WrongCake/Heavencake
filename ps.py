@@ -3,6 +3,7 @@ from discord.ext import tasks
 import asyncio
 import os
 import io
+from keep_alive import keep_alive  # Import the keep_alive function
 
 # Load environment variable securely (assuming .env file exists)
 from dotenv import load_dotenv
@@ -88,5 +89,6 @@ class ForwardingBot(discord.Client):
         self.forward_task.start()
 
 if __name__ == '__main__':
+    keep_alive()  # Call the keep_alive function to start the Flask server
     bot = ForwardingBot()
     bot.run(BOT_TOKEN)
