@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
+print(f"Loaded BOT_TOKEN: {BOT_TOKEN}")
+
 # Channel IDs (replace with your actual channel IDs)
 SOURCE_CHANNEL_IDS = [
     863803391239127090,
@@ -53,8 +55,12 @@ class ForwardingBot(discord.Client):
                     forwarded_image = await destination_channel.send(file=discord.File(io.BytesIO(file_content), filename=attachment.filename, spoiler=attachment.is_spoiler()))
 
                     self.forwarded_messages[message.id] = (message.channel.id, destination_channel_id)  # Store the forwarded message details
-                except discord.HTTPException:
-                    continue
+                except discord.HTTPException as e:
+                    logging.error(f"HTTPException while forwarding message: {e}")
+                    if e.status == 429:
+                        retry_after = e.response.headers.get('Retry-After')
+                        await asyncio.sleep(float(retry_after))
+                        await self.process_message(message)
         else:
             await asyncio.sleep(3)
             updated_message = await message.channel.fetch_message(message.id)
@@ -91,7 +97,6 @@ class ForwardingBot(discord.Client):
     async def on_ready(self):
         logging.info(f'Logged in as {self.user} (ID: {self.user.id})')
         logging.info('------')
-        print(f"Loaded BOT_TOKEN: {BOT_TOKEN}")
         self.forward_task.start()
 
 if __name__ == '__main__':
@@ -100,4 +105,5 @@ if __name__ == '__main__':
     try:
         bot.run(BOT_TOKEN)
     except discord.HTTPException as e:
+        logging.error(f"HTTPException: {e.response.status}, {e.response.reason}, {e.text}")
         logging.error(f"Failed to run the bot: {e}")
