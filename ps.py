@@ -91,6 +91,7 @@ class ForwardingBot(discord.Client):
     async def on_ready(self):
         logging.info(f'Logged in as {self.user} (ID: {self.user.id})')
         logging.info('------')
+        print(f"Loaded BOT_TOKEN: {BOT_TOKEN}")
         self.forward_task.start()
 
 if __name__ == '__main__':
