@@ -4,6 +4,7 @@ import asyncio
 import os
 import io
 from keep_alive import keep_alive  # Import the keep_alive function
+import logging
 
 # Load environment variable securely (assuming .env file exists)
 from dotenv import load_dotenv
@@ -21,6 +22,8 @@ DESTINATION_CHANNEL_IDS = [
     1248574132417724518,
     1248623054226067577
 ]
+
+logging.basicConfig(level=logging.DEBUG)
 
 class ForwardingBot(discord.Client):
 
@@ -86,9 +89,14 @@ class ForwardingBot(discord.Client):
                 del self.forwarded_messages[message.id]
 
     async def on_ready(self):
+        logging.info(f'Logged in as {self.user} (ID: {self.user.id})')
+        logging.info('------')
         self.forward_task.start()
 
 if __name__ == '__main__':
     keep_alive()  # Call the keep_alive function to start the Flask server
     bot = ForwardingBot()
-    bot.run(BOT_TOKEN)
+    try:
+        bot.run(BOT_TOKEN)
+    except discord.HTTPException as e:
+        logging.error(f"Failed to run the bot: {e}")
